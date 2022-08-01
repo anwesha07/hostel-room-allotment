@@ -1,32 +1,40 @@
+const BadRequestException = require("../utils/errors/BadRequestException");
 const userRepository = require('./user.repository');
-const NotFoundException = require('../utils/errors/NotFoundException');
+const bcrypt = require("bcrypt");
 
-const getAllUsers = () => userRepository.findAllUsers();
+const registerStudent = async (registrationData) => {
+    // check whether another student exists with same email
+    const userWithSameEmail = await userRepository.countUserByEmail(registrationData.email);
+    if (userWithSameEmail) {
+        throw new BadRequestException('An user with same email already exists!');
+    }
 
-const createUser = (userDetails) => userRepository.createUser(userDetails);
+    // hash password to store
+    const hashedPassword = await bcrypt.hash(registrationData.password, 10);
+    registrationData.password = hashedPassword;
 
-const getUserById = async (id) => {
-  const userToFind = await userRepository.findUserById(id);
-  if (!userToFind) {
-    throw new NotFoundException(`No user found with id ${id}`);
-  }
-  return userToFind;
+    // save this data in DB
+    const newStudent = await userRepository.saveUser(registrationData);
+
+    //generate and return jwt token
+    const token = newStudent.generateToken();
+    return token;
+}
+
+const loginUser = async(loginData) => {
+    //get details of the reqistration number from DB
+    const user = await userRepository.getUser(loginData.registrationNumber);
+    if (!user) throw new BadRequestException('Invalid Registration number');
+
+    //compare the password retrieved from DB with the entered password
+    const validPassword = await bcrypt.compare(loginData.password, user.password);
+    if (!validPassword) throw new BadRequestException('Invalid password');
+
+    const token = user.generateToken();
+    return token; 
 };
 
-const updateUserById = async (id, userDetails) => {
-  const updatedUserDetails = await userRepository.updateUserById(id, userDetails);
-  if (!updatedUserDetails) {
-    throw new NotFoundException(`No user found with id ${id}`);
-  }
-  return updatedUserDetails;
+module.exports = {
+    registerStudent,
+    loginUser,
 };
-
-const deleteUserById = async (id) => {
-  const deletedUserDetails = await userRepository.updateUserById(id);
-  if (!deletedUserDetails) {
-    throw new NotFoundException(`No user found with id ${id}`);
-  }
-  return deletedUserDetails;
-};
-
-module.exports = { getAllUsers, createUser, getUserById, updateUserById, deleteUserById };

@@ -1,56 +1,70 @@
-const userDb = [
-  {
-    id: 1,
-    name: 'Bob Marley',
-    age: 100,
-    email: 'marley@harleydavidson.com',
+/* eslint-disable no-underscore-dangle */
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    minlength: 1,
+    maxlength: 50,
   },
-];
-
-const findAllUsers = () => new Promise((resolve) => resolve(userDb));
-
-const findUserById = (id) => new Promise((resolve) => {
-  resolve(userDb.find((user) => user.id === parseInt(id, 10)));
+  registrationNumber: {
+    type: String,
+    required: true,
+    minlength: 7,
+    maxlength: 10,
+    unique: true,
+  },
+  course: {
+    type: String,
+    enum:['BTech', 'MCA', 'MBA', 'MTech'],
+  },
+  semester: {
+    type: Number,
+    min: 1,
+    max : 8,
+  },
+  email: {
+    type: String,
+    required: true,
+    minlength: 7,
+    maxlength: 50,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+    maxlength: 1024,
+    minlength: 5,
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-const createUser = (userDetails) => {
-  const lastUserId = userDb[userDb.length - 1]?.id || 0;
-  const id = lastUserId + 1;
-  const newUserDetails = { id, ...userDetails };
-  userDb.push(newUserDetails);
-  return new Promise((resolve) => {
-    resolve(newUserDetails);
-  });
+userSchema.methods.generateToken = function generateToken() {
+  const token = jwt.sign(
+    { _id: this._id, isAdmin: this.isAdmin },
+    process.env.JWT_PRIVATE_KEY,
+  );
+  return token;
 };
 
-const updateUserById = (id, userDetails) => {
-  const idx = userDb.findIndex((user) => user.id === parseInt(id, 10));
-  if (idx === -1) return null;
-  const updatedUserDetails = {
-    id,
-    ...userDb[idx],
-    ...userDetails,
-  };
-  userDb[idx] = updatedUserDetails;
-  return new Promise((resolve) => {
-    resolve(updatedUserDetails);
-  });
+const User = mongoose.model('User', userSchema);
+
+const countUserByEmail = (email) => User.count({ email });
+const getUser = (registrationNumber) => User.findOne({registrationNumber}).select('-__v');
+
+const saveUser = (userDetails) => {
+  const user = new User(userDetails);
+  return user.save();
 };
 
-const deleteUserById = (id) => {
-  const idx = userDb.findIndex((user) => user.id === parseInt(id, 10));
-  if (idx === -1) return null;
-  const userDetails = userDb[idx];
-  userDb.splice(idx, 1);
-  return new Promise((resolve) => {
-    resolve(userDetails);
-  });
-};
 
-module.exports = {
-  findAllUsers,
-  findUserById,
-  createUser,
-  updateUserById,
-  deleteUserById,
-};
+
+module.exports = User;
+module.exports.saveUser = saveUser;
+module.exports.countUserByEmail = countUserByEmail;
+module.exports.getUser = getUser;
