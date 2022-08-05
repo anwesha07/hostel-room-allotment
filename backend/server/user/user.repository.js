@@ -18,12 +18,12 @@ const userSchema = new mongoose.Schema({
   },
   course: {
     type: String,
-    enum:['BTech', 'MCA', 'MBA', 'MTech'],
+    enum: ['BTech', 'MCA', 'MBA', 'MTech'],
   },
   semester: {
     type: Number,
     min: 1,
-    max : 8,
+    max: 8,
   },
   email: {
     type: String,
@@ -55,16 +55,18 @@ userSchema.methods.generateToken = function generateToken() {
 const User = mongoose.model('User', userSchema);
 
 const countUserByEmail = (email) => User.count({ email });
-const getUser = (registrationNumber) => User.findOne({registrationNumber}).select('-__v');
+
+const getUser = (registrationNumber) => User.findOne({ registrationNumber }).select('-__v');
+
+const getUserById = (id) => User.findById(id).select('-__v -password');
 
 const saveUser = (userDetails) => {
   const user = new User(userDetails);
   return user.save();
 };
 
-
-
 module.exports = User;
 module.exports.saveUser = saveUser;
 module.exports.countUserByEmail = countUserByEmail;
 module.exports.getUser = getUser;
+module.exports.getUserById = getUserById;
