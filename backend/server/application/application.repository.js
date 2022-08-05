@@ -36,6 +36,21 @@ const saveApplication = (applicationDetails) => {
   return application.save();
 };
 
+const listApplications = (status) => {
+  const query = {};
+  if (status) query.status = status;
+  return Application.find(query).select('transactionId transactionDate status').populate('user', 'name registrationNumber course');
+};
+
+const findApplicationById = (applicationId) => Application.findById(applicationId);
+
+const updateApplicationStatusById = (applicationId, status) => Application.findByIdAndUpdate(
+  applicationId, { $set: { status } }, { new: true },
+);
+
 module.exports = Application;
 module.exports.findApplicationByUserId = findApplicationByUserId;
 module.exports.saveApplication = saveApplication;
+module.exports.listApplications = listApplications;
+module.exports.findApplicationById = findApplicationById;
+module.exports.updateApplicationStatusById = updateApplicationStatusById;

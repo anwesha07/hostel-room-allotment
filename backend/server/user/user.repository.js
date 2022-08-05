@@ -65,8 +65,11 @@ const saveUser = (userDetails) => {
   return user.save();
 };
 
+const getUserByEmail = (email) => User.findOne({ email }).select('-__v');
+
 module.exports = User;
 module.exports.saveUser = saveUser;
 module.exports.countUserByEmail = countUserByEmail;
 module.exports.getUser = getUser;
 module.exports.getUserById = getUserById;
+module.exports.getUserByEmail = getUserByEmail;

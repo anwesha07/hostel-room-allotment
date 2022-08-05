@@ -2,22 +2,27 @@ const express = require('express');
 const userController = require('./user.controller');
 const userMiddleware = require('./user.middleware');
 
-//creating a router object that aggregates all the routes under user module
+// Creating a router object that aggregates all the routes under user module
 const userRouter = express.Router();
 
 userRouter.post(
-    '/register', 
-    userMiddleware.userRegistrationValidationMiddleware, 
-    userMiddleware.confirmPasswordValidationMiddleware, 
-    userController.registerStudent,
+  '/register',
+  userMiddleware.userRegistrationValidationMiddleware,
+  userMiddleware.confirmPasswordValidationMiddleware,
+  userController.registerStudent,
 );
 
 userRouter.post(
-    '/login',
-    userMiddleware.userLoginValidationMiddleware,
-    userController.loginUser,
+  '/login',
+  userMiddleware.userLoginValidationMiddleware,
+  userController.loginUser,
 );
 
+userRouter.post(
+  '/admin/login',
+  userMiddleware.adminUserLoginValidationMiddleware,
+  userController.loginAdminUser,
+);
 
 module.exports = userRouter;
 // userRouter.get('/register', (req, res) => {

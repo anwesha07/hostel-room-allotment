@@ -13,4 +13,24 @@ applicationRouter.post(
   applicationController.createNewApplication,
 );
 
+applicationRouter.get(
+  '/',
+  userMiddleware.userAuthMiddleware,
+  userMiddleware.adminAuthMiddleware,
+  applicationController.viewApplicationList,
+);
+
+applicationRouter.get(
+  '/status',
+  userMiddleware.userAuthMiddleware,
+  applicationController.viewApplicationStatus,
+);
+
+applicationRouter.put(
+  '/verify/:id',
+  userMiddleware.userAuthMiddleware,
+  userMiddleware.adminAuthMiddleware,
+  applicationController.verifyApplication,
+);
+
 module.exports = applicationRouter;

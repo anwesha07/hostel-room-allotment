@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const userRepository = require('./user.repository');
 const BadRequestException = require('../utils/errors/BadRequestException');
 const UnauthorizedException = require('../utils/errors/UnauthorizedException');
+const ForbiddenException = require('../utils/errors/ForbiddenException');
 
 // For registration validattion
 const userRegistrationValidationMiddleware = (req, res, next) => {
@@ -70,14 +71,9 @@ const confirmPasswordValidationMiddleware = (req, _res, next) => {
 const userLoginValidationMiddleware = (req, res, next) => {
   const schema = Joi.object({
     registrationNumber: Joi.string()
-      .alphanum()
-      .min(1)
-      .max(50)
       .required(),
 
     password: Joi.string()
-      .min(5)
-      .max(1024)
       .required(),
 
   });
@@ -112,9 +108,42 @@ const userAuthMiddleware = async (req, res, next) => {
   }
 };
 
+const adminAuthMiddleware = async (req, res, next) => {
+  if (!req.user) {
+    next(new UnauthorizedException('Access not authorized'));
+    return;
+  }
+  if (!req.user.isAdmin) {
+    next(new ForbiddenException('Route can only be accessed by admin'));
+    return;
+  }
+  next();
+};
+
+const adminUserLoginValidationMiddleware = async (req, res, next) => {
+  const schema = Joi.object({
+    email: Joi.string()
+      .required(),
+
+    password: Joi.string()
+      .required(),
+
+  });
+
+  const { error, value } = schema.validate(req.body);
+  if (error) {
+    next(new BadRequestException(error.details[0].message));
+    return;
+  }
+  req.body = value;
+  next();
+};
+
 module.exports = {
   userRegistrationValidationMiddleware,
   confirmPasswordValidationMiddleware,
   userLoginValidationMiddleware,
   userAuthMiddleware,
+  adminAuthMiddleware,
+  adminUserLoginValidationMiddleware,
 };

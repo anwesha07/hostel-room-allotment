@@ -4,7 +4,7 @@ class UnauthorizedException extends Error {
     this.statusCode = 401;
     this.body = {
       status: 'failure',
-      message: message || 'Bad Request',
+      message: message || 'Unauthorized access',
     };
   }
 }
